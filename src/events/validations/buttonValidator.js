@@ -3,17 +3,17 @@ require("colors");
 const { EmbedBuilder } = require("discord.js");
 const { developersId, testServerId } = require("../../config.json");
 const mConfig = require("../../messageConfig.json");
-const getLocalCommands = require("../../utils/getLocalCommands");
+const getButtons = require("../../utils/getButtons");
 
 module.exports = async (client, interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-  const localCommands = getLocalCommands();
+  if (!interaction.isButton()) return;
+  const buttons = getButtons();
 
   try {
-    const commandObject = localCommands.find((cmd) => cmd.data.name === interaction.commandName);
-    if (!commandObject) return;
+    const buttonObject = buttons.find((cmd) => cmd.data.name === interaction.commandName);
+    if (!buttonObject) return;
 
-    if (commandObject.devOnly ) {
+    if (buttonObject.devOnly ) {
       if(!developersId.includes(interaction.member.id)){
         const rEmbed = new EmbedBuilder()
         .setColor(`${mConfig.embedColorError}`)
@@ -23,7 +23,7 @@ module.exports = async (client, interaction) => {
       };
     };
 
-    if (commandObject.testMode) {
+    if (buttonObject.testMode) {
       if(interaction.guild.id!==testServerId){
         const rEmbed = new EmbedBuilder()
         .setColor(`${mConfig.embedColorError}`)
@@ -33,8 +33,8 @@ module.exports = async (client, interaction) => {
       };
     };
 
-    if (commandObject.userPermissions?.length) {
-      for (const permission of commandObject.userPermissions) {
+    if (buttonObject.userPermissions?.length) {
+      for (const permission of buttonObject.userPermissions) {
         if (member.permissions.has(permission)) {continue;}
 
         const rEmbed = new EmbedBuilder()
@@ -45,8 +45,8 @@ module.exports = async (client, interaction) => {
       };
     };
 
-    if (commandObject.botPermissions?.length) {
-      for (const permission of commandObject.botPermissions) {
+    if (buttonObject.botPermissions?.length) {
+      for (const permission of buttonObject.botPermissions) {
         const bot = guild.members.me;
         if (bot.permissions.has(permission)) continue;
 
@@ -57,16 +57,17 @@ module.exports = async (client, interaction) => {
         return interaction.reply({ embeds: [rEmbed], ephemeral: true });
       };
     };
-
-    if (interaction.isChatInputCommand()) {
-      if (!commandObject.run) return interaction.reply({ content: "`⚠️` This command does not have a run function!", ephemeral: true });
-
-      await commandObject.run(client, interaction);
-    } else if (interaction.isAutocomplete()) {
-      if (!commandObject.autocomplete) return interaction.respond([{ name: "No autocomplete handling found, this is a fallback option.", value: "fallbackAutoComplete" }]);
-
-      await commandObject.autocomplete(client, interaction);
+    if(interaction.message.interaction){
+      if(interaction.message.interaction.user.id!==interaction.user.id){
+        const rEmbed=new EmbedBuilder()
+        .setColor(`$(mConfig.embedColorError)`)
+        .setDescription(`${mConfig.cannotUseButton}`);
+        interaction.reply({embeds:[rEmbed], ephemeral:true}) 
+        return;
+      };
     };
+    
+    await buttonObject.run(client,interaction);
   } catch (err) {
     console.log("[ERROR]".red + "Error in your chatInputCommandValidator.js file:");
     console.log(err);

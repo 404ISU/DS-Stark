@@ -3,17 +3,17 @@ require("colors");
 const { EmbedBuilder } = require("discord.js");
 const { developersId, testServerId } = require("../../config.json");
 const mConfig = require("../../messageConfig.json");
-const getLocalCommands = require("../../utils/getLocalCommands");
+const getLocalContextMenus = require("../../utils/getLocalContextMenus");
 
 module.exports = async (client, interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-  const localCommands = getLocalCommands();
+  if (!interaction.isContextMenusCommand()) return;
+  const localContextMenus = getLocalContextMenus();
 
   try {
-    const commandObject = localCommands.find((cmd) => cmd.data.name === interaction.commandName);
-    if (!commandObject) return;
+    const menuObject = localContextMenus.find((cmd) => cmd.data.name === interaction.commandName);
+    if (!menuObject) return;
 
-    if (commandObject.devOnly ) {
+    if (menuObject.devOnly ) {
       if(!developersId.includes(interaction.member.id)){
         const rEmbed = new EmbedBuilder()
         .setColor(`${mConfig.embedColorError}`)
@@ -23,7 +23,7 @@ module.exports = async (client, interaction) => {
       };
     };
 
-    if (commandObject.testMode) {
+    if (menuObject.testMode) {
       if(interaction.guild.id!==testServerId){
         const rEmbed = new EmbedBuilder()
         .setColor(`${mConfig.embedColorError}`)
@@ -33,8 +33,8 @@ module.exports = async (client, interaction) => {
       };
     };
 
-    if (commandObject.userPermissions?.length) {
-      for (const permission of commandObject.userPermissions) {
+    if (menuObject.userPermissions?.length) {
+      for (const permission of menuObject.userPermissions) {
         if (member.permissions.has(permission)) {continue;}
 
         const rEmbed = new EmbedBuilder()
@@ -45,8 +45,8 @@ module.exports = async (client, interaction) => {
       };
     };
 
-    if (commandObject.botPermissions?.length) {
-      for (const permission of commandObject.botPermissions) {
+    if (menuObject.botPermissions?.length) {
+      for (const permission of menuObject.botPermissions) {
         const bot = guild.members.me;
         if (bot.permissions.has(permission)) continue;
 
@@ -59,13 +59,13 @@ module.exports = async (client, interaction) => {
     };
 
     if (interaction.isChatInputCommand()) {
-      if (!commandObject.run) return interaction.reply({ content: "`⚠️` This command does not have a run function!", ephemeral: true });
+      if (!menuObject.run) return interaction.reply({ content: "`⚠️` This command does not have a run function!", ephemeral: true });
 
-      await commandObject.run(client, interaction);
+      await menuObject.run(client, interaction);
     } else if (interaction.isAutocomplete()) {
-      if (!commandObject.autocomplete) return interaction.respond([{ name: "No autocomplete handling found, this is a fallback option.", value: "fallbackAutoComplete" }]);
+      if (!menuObject.autocomplete) return interaction.respond([{ name: "No autocomplete handling found, this is a fallback option.", value: "fallbackAutoComplete" }]);
 
-      await commandObject.autocomplete(client, interaction);
+      await menuObject.autocomplete(client, interaction);
     };
   } catch (err) {
     console.log("[ERROR]".red + "Error in your chatInputCommandValidator.js file:");

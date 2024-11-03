@@ -1,63 +1,64 @@
 require("colors");
 
+const commandComparing = require("../../utils/commandComparing");
+const getApplicationCommands = require("../../utils/getApplicationCommands");
+const getLocalCommands = require("../../utils/getLocalCommands");
 const { testServerId } = require("../../config.json");
-const commandComparin = require("../../utils/commandComparing");
-const getApplicationComands = require("../../utils/getApplicationComands");
-const getLocalComands = require("../../utils/getLocalComands");
-const consolelog = require("./consoleLog");
+// const consolelog = require("./consoleLog");
 
 module.exports = async (client) => {
   try {
-    const [localComands, applicationCommands] = await Promise.all([
-      getLocalComands(),
-      getApplicationComands(client, testServerId),
-    ]);
+    const localCommands=getLocalCommands()
+    const applicationComands = await 
+      getApplicationCommands(client, testServerId);
 
-    for (const localComand of localComands) {
-      const { data, deleted } = localComand;
-      const {
-        name: commandName,
-        description: commandDescription,
-        options: commandOptions,
-      } = data;
-
-      const existingCommand = await applicationCommands.cache.find(
+      // прогоняем какие локальные команды существуют
+    for (const localCommand of localCommands) {
+      const { data } = localCommand;
+      const commandName=data.name;
+      const commandDescription=data.description;
+      const commandOptions=data.options;
+      // ищем существующуие команды по имени
+      const existingCommand = await applicationComands.cache.find(
         (cmd) => cmd.name === commandName
       );
 
-      if (deleted) {
         if (existingCommand) {
-          await applicationCommands.delete(existingCommand.id);
-          console.log(`Deleted command: ${commandName}`.red);
+          // если команда удалена
+          if(localCommand.deleted){
+          await applicationComands.delete(existingCommand.id);
+          console.log(`[COMAND REGISTERY]Команда удалена: ${commandName}`.red);
+          continue;
+          };
+          // если команда изменена
+          if(commandComparing(existingCommand,localCommand)){
+            await applicationComands.edit(existingCommand.id, {
+              name: commandName,
+              description: commandDescription,
+              options: commandOptions,
+            });
+            console.log(
+              `[COMAND REGISTERY] Обновлена команда ${commandName}`.yellow
+            );
+          };
         } else {
-          console.log(
-            `Command "${commandName}" была пропущена, свойство удалено, установлено значение true`
+          if(localCommand.deleted){
+            console.log(
+            `[COMAND REGISTERY] Command ${commandName} была пропущена, свойство удалено, установлено значение true`
               .grey
           );
-        }
-      } else if (existingCommand) {
-        if (commandComparin(existingCommand, localComand)) {
-          await applicationCommands.edit(existingCommand.id, {
-            name: commandName,
+          continue
+          };
+          await applicationComands.create({name: commandName,
             description: commandDescription,
-            options: commandOptions,
-          });
+            options: commandOptions,});
           console.log(
-            `Обновлена команда "${commandName}": ${commandDescription}`.yellow
-          );
-        }
-      } else {
-        await applicationCommands.create({
-          name: commandName,
-          description: commandDescription,
-          options: commandOptions,
-        });
-        console.log(
-          `Создана команда "${commandName}": ${commandDescription}`.green
+          `Создана команда ${commandName}`.green
         );
-      }
+      };
+      };
     }
-  } catch (error) {
+   catch (error) {
     console.log(`ошибка в команде: \n ${error}`.red);
   }
 };
