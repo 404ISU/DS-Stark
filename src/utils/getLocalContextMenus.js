@@ -3,7 +3,7 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exepctions=[]) => {
   let localContextMenus = [];
-  const menuFiles = getAllFiles(path.join(__dirname, "..", "contextmenus"), true);
+  const menuFiles = getAllFiles(path.join(__dirname, "..", "contextmenus"));
 
  
     for (const menuFile of menuFiles) {

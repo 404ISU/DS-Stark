@@ -11,7 +11,7 @@
 
   "userNoPermissions":"у вас не достаточно прав для использования этой команды",
   "botNoPermissions":"у меня не достаточсно прав для использования этой команды",
-  "hasHigherRolePosition": "у этого пользователя чем у вас ",
+  "hasHigherRolePosition": "у этого пользователя больше прав чем у вас ",
   "unableToInteractWithYourself": "ты не можешь так поступить с собой ",
   "cannotUseButton": "Вы не можете использовать эту кнопку"
 

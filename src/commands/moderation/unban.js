@@ -1,50 +1,55 @@
-const {SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, GuildMember}=require("discord.js");
-const mConfig=require("../../messageConfig.json");
-const moderationSchemas=require("../../schemas/moderation");
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require("discord.js");
+const mConfig = require("../../messageConfig.json");
+const moderationSchemas = require("../../schemas/moderation");
 
-
-
-module.exports={
-  data:new SlashCommandBuilder()
+module.exports = {
+  data: new SlashCommandBuilder()
     .setName("unban")
     .setDescription("Revoke a server ban.")
-    .addStringOption((o)=>o
-      .setName("user_id")
-      .setDescription("The id of the uesr whose ban you want to revoke")
-      .setRequired(true)
-  )
-  .toJSON()
-  ,
-  userPermissions:[PermissionFlagsBits.ManageMessages],
-  botPermissions:[PermissionFlagsBits.BanMembers],
+    .addStringOption((o) =>
+      o
+        .setName("user_id")
+        .setDescription("The ID of the user whose ban you want to revoke.")
+        .setRequired(true)
+    ),
+  userPermissions: [PermissionFlagsBits.ManageMessages],
+  botPermissions: [PermissionFlagsBits.BanMembers],
 
-  run:async(client)=>{
-    const {options,guildId,guild,member}=interaction;
+  run: async (client, interaction) => {
+    const { options, guildId, guild } = interaction;
 
-    const userId=options.getString("user_id")
+    const userId = options.getString("user_id");
 
-    let data=await moderationSchemas.finOne({GuildID:guildId});
+    // Проверка конфигурации сервера
+    let data = await moderationSchemas.findOne({ GuildID: guildId });
+    if (!data) {
+      const rEmbed = new EmbedBuilder()
+        .setColor(mConfig.embedColorError)
+        .setDescription(
+          "`❌` This server isn't configured yet.\n\nUse `/moderatesystem configure` to start configuring this server."
+        );
+      return interaction.reply({ embeds: [rEmbed], ephemeral: true });
+    }
 
-    if(!data){
-      rEmbed
-      .setColor(mConfig.embedColorError)
-      .setDescription(`\`❌\`this server isn't configurated yet.\n\n``Use \`/moderatesystem configure\` to start configuring this server`);
-      return interaction.reply({embeds:[rEmbed],ephemeral:true});
-    };
-  
-    if(userId.id===member.id){
-      rEmbed
-      .setColor(mConfig.embedColorError)
-      .setDescription(`${mConfig.unableToInteractWithYourself}`);
-      return interaction.reply({embeds:[rEmbed],ephemeral:true});
-    };
-    guild.member.unban(userId);
+    try {
+      // Снятие бана
+      await guild.members.unban(userId);
 
-    const rEmbed=new EmbedBuilder()
-    .setColor(mConfig.embedColorSucces)
-    .setFooter({text:`${client.user.uesrname}- Unban user`})
-    .setDescription(`\`✔\`Successfully revoked the ban of \`${userId}\`.`);
+      const rEmbed = new EmbedBuilder()
+        .setColor(mConfig.embedColorSucces)
+        .setFooter({
+          text: `${client.user.username} - Unban User`,
+        })
+        .setDescription(`\`✔\` Successfully revoked the ban of user with ID: \`${userId}\`.`);
 
-  interaction.reply({embeds:[rEmbed], ephemeral:true});
-  }
-}
+      interaction.reply({ embeds: [rEmbed], ephemeral: true });
+    } catch (error) {
+      // Обработка ошибок, если пользователь не найден или другая ошибка
+      const rEmbed = new EmbedBuilder()
+        .setColor(mConfig.embedColorError)
+        .setDescription(`\`❌\` Failed to revoke the ban. Please ensure the user ID is correct.`);
+
+      interaction.reply({ embeds: [rEmbed], ephemeral: true });
+    }
+  },
+};

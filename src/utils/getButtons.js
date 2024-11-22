@@ -3,7 +3,7 @@ const getAllFiles = require("./getAllFiles");
 
 module.exports = (exepctions=[]) => {
   let buttons = [];
-  const buttonFiles = getAllFiles(path.join(__dirname, "..", "button"), true);
+  const buttonFiles = getAllFiles(path.join(__dirname, "..", "buttons"));
 
  
     for (const buttonFile of buttonFiles) {

@@ -1,12 +1,12 @@
 const {ContextMenuCommandBuilder,ApplicationCommandType, EmbedBuilder,PermissionFlagsBits,ActionRowBuilder, ButtonBuilder, ButtonStyle}=require("discord.js");
-const mConfig=require("../../messageConfig.json");
-const moderationSchemas=require("../../schemas/moderation");
+const mConfig=require("../messageConfig.json");
+const moderationSchemas=require("../schemas/moderation");
 
 
 
 module.exports={
   data:new ContextMenuCommandBuilder()
-    .setName("moderate User")
+    .setName("Moderate user")
     .setType(ApplicationCommandType.User)
 ,
 userPermissions:[PermissionFlagsBits.ManageMessages],
@@ -22,7 +22,7 @@ run:async(client, interaction)=>{
   });
 
   let data = await moderationSchemas.findOne({
-    guildID:guildId
+    GuildID:guildId
   })
   if(!data){
     rEmbed
@@ -37,7 +37,7 @@ run:async(client, interaction)=>{
     .setDescription(`${mConfig.unableToInteractWithYourself}`);
     return interaction.reply({embeds:[rEmbed],ephemeral:true});
   };
-  if(targetMember.roles.highest.position>=member.roles.highest.position){
+  if(targetMember.roles.highest.position>member.roles.highest.position){
     rEmbed
     .setColor(mConfig.embedColorError)
     .setDescription(`${mConfig.hasHigherRolePosition}`);

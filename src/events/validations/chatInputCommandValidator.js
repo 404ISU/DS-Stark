@@ -35,7 +35,9 @@ module.exports = async (client, interaction) => {
 
     if (commandObject.userPermissions?.length) {
       for (const permission of commandObject.userPermissions) {
-        if (member.permissions.has(permission)) {continue;}
+        if (interaction.member.permissions.has(permission)){
+          continue;
+        }
 
         const rEmbed = new EmbedBuilder()
           .setColor(`${mConfig.embedColorError}`)
@@ -47,7 +49,7 @@ module.exports = async (client, interaction) => {
 
     if (commandObject.botPermissions?.length) {
       for (const permission of commandObject.botPermissions) {
-        const bot = guild.members.me;
+        const bot = interaction.guild.members.me;
         if (bot.permissions.has(permission)) continue;
 
         const rEmbed = new EmbedBuilder()

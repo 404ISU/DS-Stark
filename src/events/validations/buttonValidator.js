@@ -10,7 +10,7 @@ module.exports = async (client, interaction) => {
   const buttons = getButtons();
 
   try {
-    const buttonObject = buttons.find((cmd) => cmd.data.name === interaction.commandName);
+    const buttonObject = buttons.find((btn) => btn.customId===interaction.customId);
     if (!buttonObject) return;
 
     if (buttonObject.devOnly ) {
