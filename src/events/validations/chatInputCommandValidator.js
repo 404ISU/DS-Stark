@@ -1,43 +1,39 @@
 require("colors");
 
 const { EmbedBuilder } = require("discord.js");
-const { developersId, testServerId } = require("../../config.json");
+const { developersIds, testServerId } = require("../../config.json");
 const mConfig = require("../../messageConfig.json");
 const getLocalCommands = require("../../utils/getLocalCommands");
 
 module.exports = async (client, interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
   const localCommands = getLocalCommands();
 
+  const { commandName, member, guildId, guild } = interaction;
+
   try {
-    const commandObject = localCommands.find((cmd) => cmd.data.name === interaction.commandName);
+    const commandObject = localCommands.find((command) => command.data.name === commandName);
     if (!commandObject) return;
 
-    if (commandObject.devOnly ) {
-      if(!developersId.includes(interaction.member.id)){
-        const rEmbed = new EmbedBuilder()
+    if (commandObject.devOnly && !developersIds.includes(member.id)) {
+      const rEmbed = new EmbedBuilder()
         .setColor(`${mConfig.embedColorError}`)
         .setDescription(`${mConfig.commandDevOnly}`);
-        interaction.reply({embeds:{rEmbed}, ephemeral:true});
-        return;
-      };
+
+      return interaction.reply({ embeds: [rEmbed], ephemeral: true });
     };
 
-    if (commandObject.testMode) {
-      if(interaction.guild.id!==testServerId){
-        const rEmbed = new EmbedBuilder()
+    if (commandObject.testMode && guildId !== testServerId) {
+      const rEmbed = new EmbedBuilder()
         .setColor(`${mConfig.embedColorError}`)
         .setDescription(`${mConfig.commandTestMode}`);
-        interaction.reply({embeds:{rEmbed}, ephemeral:true});
-        return;
-      };
+
+      return interaction.reply({ embeds: [rEmbed], ephemeral: true });
     };
 
     if (commandObject.userPermissions?.length) {
       for (const permission of commandObject.userPermissions) {
-        if (interaction.member.permissions.has(permission)){
-          continue;
-        }
+        if (member.permissions.has(permission)) continue;
 
         const rEmbed = new EmbedBuilder()
           .setColor(`${mConfig.embedColorError}`)
@@ -49,7 +45,7 @@ module.exports = async (client, interaction) => {
 
     if (commandObject.botPermissions?.length) {
       for (const permission of commandObject.botPermissions) {
-        const bot = interaction.guild.members.me;
+        const bot = guild.members.me;
         if (bot.permissions.has(permission)) continue;
 
         const rEmbed = new EmbedBuilder()

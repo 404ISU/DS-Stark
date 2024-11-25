@@ -1,68 +1,47 @@
-module.exports = (existing, local) => {
-  // проверяем изменилось ли имя
-  const changed = (a, b) => JSON.stringify(a) !== JSON.stringify(b);
+module.exports = (localCommand, existingCommand) => {
+  const commandChoices = (choices = []) => {
+    return choices.map((choice) => ({
+      name: choice.name,
+      nameLocalizations: (choice.nameLocalizations ?? choice.name_localizations) ?? {},
+      value: choice.value
+    }));
+  };
 
-  // проверяем изменилось ли описание и имя
+  const commandOptions = (options = []) => {
+    return options.map((option) => ({
+      type: option.type ?? 1,
+      name: option.name,
+      nameLocalizations: (option.nameLocalizations ?? option.name_localizations) ?? {},
+      description: option.description,
+      descriptionLocalizations: (option.descriptionLocalizations ?? option.description_localizations) ?? {},
+      options: commandOptions(option.options) ?? [],
+      autocomplete: option.autocomplete ?? null,
+      channelTypes: (option.channelTypes ?? option.channel_types) ?? null,
+      choices: commandChoices(option.choices) ?? [],
+      minValue: (option.minValue ?? option.min_value) ?? null,
+      maxValue: (option.maxValue ?? option.max_value) ?? null,
+      minLength: (option.minLength ?? option.min_length) ?? null,
+      maxLength: (option.maxLength ?? option.max_length) ?? null,
+      required: option.required ?? false
+    }));
+  };
+
+  const commandData = (data) => ({
+    name: data.name,
+    nameLocalizations: (data.nameLocalizations ?? data.name_localizations) ?? {},
+    description: data.description,
+    descriptionLocalizations: (data.descriptionLocalizations ?? data.description_localizations) ?? {},
+    options: commandOptions(data.options) ?? [],
+    defaultMemberPermissions: (data.defaultMemberPermissions ?? data.default_member_permissions) ?? null,
+    dmPermission: (data.dmPermission ?? data.dm_permission) ?? true,
+    nsfw: data.nsfw ?? false
+  });
+
   if (
-    changed(existing.name, local.data.name) ||
-    changed(existing.description, local.data.description)
-  ) {
-    return true;
-  }
+    JSON.stringify(commandData(localCommand), (_, v) => typeof v === "bigint" ? v.toString() : v)
+    !==
+    JSON.stringify(commandData(existingCommand), (_, v) => typeof v === "bigint" ? v.toString() : v)
+  ) return commandData(localCommand);
 
-  // проверяем изменились ли опции
-  const optionChanged = changed(
-    optionsArray(existing),
-    optionsArray(local.data)
-  );
-
-  
-  // если хотя бы одно из полей изменилось, возвращаем true
-  return optionChanged;
-
-  // функция для преобразования объекта опций в массив
-  function optionsArray(cmd) {
-    const cleanObject = (obj) => {
-      for (const key in obj) {
-        // проверяем что типы объектов совпадают если нет или масив пустой, то удаляем обхект
-        if (typeof obj[key] === "object") {
-          cleanObject(obj[key]);
-          if(!obj[key] || (Array.isArray(obj[key] && obj[key].lenght===0)))
-            delete obj[key];
-        }else if (obj[key]=== undefined){
-          delete obj[key];
-        }
-      }
-    };
-    // нормализованный объект
-    const normalizeObject=(input)=>{
-      // проверим является ли он масивом, если да то преобразуем его
-      if(Array.isArray(input)){
-        return input.map((item)=>normalizeObject(item));
-      }
-      // запишем нормализованный шаблон
-      const normalizedItem={
-        type: input.type,
-        name:input.name,
-        description:input.description,
-        // проверка есть ли входные данные для параметров, если да, то нормализуем входные данные для параметров
-        options: input.options ? normalizeObject(input.options):undefined,
-        // требования для input
-        required: input.required
-      }
-      // возвращаем нормализованный шаблон
-      return normalizedItem;
-    };
-
-    // если для cmd нет входных данных, вернем пустой массив и преобразуем его
-    return (cmd.options || []).map((option)=>{
-      let cleanedOption = JSON.parse(JSON.stringify(option));
-      cleanedOption.options ? (cleanedOption.options = normalizeObject(cleanedOption.options)): (cleanedOption.option=normalizeObject(cleanObject));
-      cleanObject(cleanedOption);
-      return{
-        ...cleanedOption,
-        choices: cleanedOption.choices ? JSON.stringify(cleanedOption.choices.map((c)=>c.value)) : null,
-      }
-    })
-  }
+  return false;
 };
