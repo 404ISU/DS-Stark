@@ -1,4 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  PermissionFlagsBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
 const mConfig = require("../../messageConfig.json");
 const moderationSchemas = require("../../schemas/moderation");
 
@@ -7,7 +14,8 @@ module.exports = {
     .setName("moderate")
     .setDescription("Moderate a server member.")
     .addUserOption((o) =>
-      o.setName("user")
+      o
+        .setName("user")
         .setDescription("The server member you want to moderate.")
         .setRequired(true)
     ),
@@ -21,17 +29,17 @@ module.exports = {
     const user = options.getUser("user");
     const targetMember = await interaction.guild.members.fetch(user.id);
 
-    const rEmbed = new EmbedBuilder()
-      .setColor("FFFFFF")
-      .setFooter({
-        text: `${client.user.username} - Moderate user`
-      });
+    const rEmbed = new EmbedBuilder().setColor("FFFFFF").setFooter({
+      text: `${client.user.username} - Moderate user`,
+    });
 
     let data = await moderationSchemas.findOne({ GuildID: guildId });
     if (!data) {
-      rEmbed.setColor(mConfig.embedColorError).setDescription(
-        "❌ This server isn't configured yet.\n\nUse `/moderatesystem configure` to start configuring this server."
-      );
+      rEmbed
+        .setColor(mConfig.embedColorError)
+        .setDescription(
+          "❌ This server isn't configured yet.\n\nUse `/moderatesystem configure` to start configuring this server."
+        );
       return interaction.reply({ embeds: [rEmbed], ephemeral: true });
     }
 
@@ -50,16 +58,19 @@ module.exports = {
 
     const moderationButtons = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId("banBtn")
-        .setLabel("Server Ban")
-        .setStyle(ButtonStyle.Danger),
+        .setCustomId("punishmentBtn")
+        .setLabel("Punishments")
+        .setEmoji("💀")
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
-        .setCustomId("kickBtn")
-        .setLabel("Server Kick")
-        .setStyle(ButtonStyle.Danger),
+        .setCustomId("otherBtn")
+        .setLabel("Utility")
+        .setEmoji("🔍")
+        .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId("cancelBtn")
         .setLabel("Cancel")
+        .setEmoji("❌")
         .setStyle(ButtonStyle.Secondary)
     );
 
@@ -68,7 +79,9 @@ module.exports = {
         name: `${targetMember.user.username}`,
         iconURL: targetMember.user.displayAvatarURL({ dynamic: true }),
       })
-      .setDescription(`❔ What action do you want to use against ${targetMember.user.username}?`);
+      .setDescription(
+        `❔ What action do you want to use against ${targetMember.user.username}?`
+      );
 
     interaction.reply({ embeds: [rEmbed], components: [moderationButtons] });
   },

@@ -68,7 +68,7 @@ module.exports = {
     }
 
     try {
-      await targetMember.ban({ reason: `${reason}`, deleteMessageDays: 7 });
+      await targetMember.ban({ reason: `${reason}`, deleteMessageSeconds: 60 * 60 * 24 * 7 });
     } catch (error) {
       const errorEmbed = new EmbedBuilder()
         .setColor(mConfig.embedColorError)

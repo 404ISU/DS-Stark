@@ -29,7 +29,9 @@ module.exports = {
                 )
                 .setRequired(true)
                 .addChannelTypes(ChannelType.GuildText) // Указан тип
-          )
+
+                // роль для мьюта пользователей
+          ).addRoleOption((o)=> o.setName("mute_role").setDescription("The role to use for muting members").setRequired(true))
           .addBooleanOption((option) => // level 2
           option
               .setName("multi_guilded")
@@ -62,6 +64,7 @@ module.exports = {
           const multiGuilded=options.getBoolean("multi_guilded"); // level 2
 
 
+          const muteRole=options.getRole("mute_role");
           const loggingChannel=options.getChannel("logging_channel");
 
           let dataGD = await moderationSchemas.findOne({GuildID: guildId});
@@ -80,7 +83,9 @@ module.exports = {
               dataGD = new moderationSchemas({
                 GuildID: guildId,
                 MultiGuilded: multiGuilded, // level 2
+                MuteRoleID: muteRole.id,
                 LoggingChannelID: loggingChannel.id,
+                
                 
               });
               dataGD.save();
@@ -95,6 +100,11 @@ module.exports = {
                   inline: true,
                 }
                 // level 2
+                ,{
+                  name: "Mute Role",
+                  value: `${muteRole}`,
+                  inline: true,
+                }
                 ,{
                   name: "Logging channel",
                   value: `${loggingChannel}`,
@@ -129,6 +139,11 @@ module.exports = {
                         value: `<@${client.user.id}>`,
                         inline: true,
                       },
+                      {
+                        name: "Mute Role",
+                        value: `${muteRole}`,
+                        inline: true,
+                      },
                     {
                       name: "Reason",
                       value: `\`Suspicious user listed by developer. Please contact the developer if this is a mistake\``,
@@ -145,7 +160,9 @@ module.exports = {
                 }else{ 
                   await moderationSchemas.findOneAndUpdate(
                     {GuildID: guildId},
-                    {MultiGuilded:multiGuilded,LogChannelID: loggingChannel.id } // multiguilded level 2
+                    {MultiGuilded:multiGuilded,
+                      MuteRoleID: muteRole.id,
+                      LogChannelID: loggingChannel.id, } // multiguilded level 2
                   );
 
                   rEmbed
@@ -159,6 +176,11 @@ module.exports = {
                       inline: true,
                     },
                     // level 2
+                    {
+                      name: "Mute Role",
+                      value: `${muteRole}`,
+                      inline: true,
+                    },
                     {
                       name: "Logging channel",
                       value: `${loggingChannel}`,

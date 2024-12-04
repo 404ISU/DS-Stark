@@ -1,7 +1,7 @@
 const path = require("path");
 const getAllFiles = require("./getAllFiles");
 
-module.exports = (exepctions=[]) => {
+module.exports = (excepctions=[]) => {
   let localContextMenus = [];
   const menuFiles = getAllFiles(path.join(__dirname, "..", "contextmenus"));
 
@@ -10,7 +10,7 @@ module.exports = (exepctions=[]) => {
       const menuObject = require(menuFile);
 
 
-      if(exepctions.includes(menuObject.name)) continue;
+      if(excepctions.includes(menuObject.name)) continue;
       localContextMenus.push(menuObject);
 
   };
