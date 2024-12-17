@@ -21,6 +21,13 @@ module.exports = {
       })
       const targetMember=guildMembers.first();
 
+      if (!targetMember) {
+        return interaction.reply({
+            content: "Пользователь не найден на сервере.",
+            ephemeral: true,
+        });
+    }
+
     const banTime = fields.getTextInputValue("tempbanTime");
     const banReason = fields.getTextInputValue("tempbanReason");
 
@@ -109,6 +116,11 @@ module.exports = {
             targetMember.id
           );
 
+          if (!externalMember) {
+            console.warn(`Пользователь с ID ${targetMember.id} не найден в гильдии ${GuildID}.`);
+            continue;
+        }
+
           if (
             externalMember.roles.highest.position >=
             externalBot.roles.highest.position
@@ -157,6 +169,11 @@ module.exports = {
 
     const {LogChannelID}=dataGD;
     const loggingChannel=guild.channels.cache.get(LogChannelID);
+
+    if (!loggingChannel) {
+      console.error(`Лог-канал с ID ${LogChannelID} не найден.`);
+      return;
+  }
 
     // на сервере где забанили
     const lEmbed = new EmbedBuilder()
