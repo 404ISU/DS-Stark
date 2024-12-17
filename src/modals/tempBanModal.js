@@ -1,6 +1,3 @@
-// допилить
-
-
 const moderationSchema = require("../schemas/moderation");
 const mConfig = require("../messageConfig.json");
 const { PermissionFlagsBits, EmbedBuilder } = require("discord.js");
